@@ -9,6 +9,7 @@ package {
 	import flash.filesystem.FileStream;
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
+	import flash.utils.Dictionary;
 	
 	import threeshooter.Parser;
 
@@ -22,12 +23,16 @@ package {
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 		}
 
-		private function readXml(file:File):XML {
+		private function readString(file:File):String {
 			var fileStream:FileStream = new FileStream();
 			fileStream.open(file, FileMode.READ);
-			var xml:XML = XML(fileStream.readUTFBytes(fileStream.bytesAvailable));
+			var str:String = fileStream.readUTFBytes(fileStream.bytesAvailable);
 			fileStream.close();
-			return xml;
+			return str;
+		}
+
+		private function readXml(file:File):XML {
+			return new XML(readString(file));
 		}
 
 		private function writeJson(mesh:Object, name:String):void {
@@ -43,7 +48,7 @@ package {
 		protected function addedToStageHandler(event:Event):void {
 
 			removeEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
-			
+
 			var stageWidth:int = 550;
 			var stageHeight:int = 400;
 			var dragCell:int = 100;
@@ -69,7 +74,8 @@ package {
 		protected function dragDropHandler(event:NativeDragEvent):void {
 			var dropFiles:Array = event.clipboard.getData(ClipboardFormats.FILE_LIST_FORMAT) as Array;
 			for each (var file:File in dropFiles) {
-				writeJson(Parser.parseMesh(readXml(file)), file.name.replace("." + file.extension, ""));
+				var materials:Dictionary = Parser.parseMaterials(readString(new File(file.nativePath.replace(".MESH." + file.extension, ".MATERIAL"))));
+				writeJson(Parser.parseMesh(readXml(file), materials), file.name.replace("." + file.extension, ""));
 			}
 		}
 
