@@ -1,11 +1,14 @@
 from subprocess import call
 import json
+import os
 
+
+ogre_converter = 'OgreXMLConverter'
 
 
 def convert_mesh_to_xml(filename):
 	name = filename.lower() + '.mesh'
-	call("OgreXMLConverter.exe " + name)
+	call([os.path.abspath(ogre_converter), os.path.abspath(name)])
 	convert_xml_to_json(filename)
 
 
@@ -54,26 +57,29 @@ def parse_geometry(xml):
 		if 'positions' in vb.attrib:
 			vertex_pos = vb.findall('./vertex/position')
 
-			tmp_list = geo['vertices']
+			tmp_list = []
 			for e in vertex_pos:
 				tmp_list.append(float(e.attrib['x']))
 				tmp_list.append(float(e.attrib['y']))
 				tmp_list.append(float(e.attrib['z']))
+			geo['vertices'] = tmp_list
 
 		if 'normals' in vb.attrib:
 			vertex_normals = vb.findall('./vertex/normal')
-			tmp_list = geo['normals']
-			for e in vertex_pos:
+			tmp_list = []
+			for e in vertex_normals:
 				tmp_list.append(float(e.attrib['x']))
 				tmp_list.append(float(e.attrib['y']))
 				tmp_list.append(float(e.attrib['z']))
+			geo['normals'] = tmp_list
 
 		if 'texture_coords' in vb.attrib:
 			texcoords = vb.findall('./vertex/texcoord')
-			tmp_list = geo['texturecoords']
+			tmp_list = []
 			for e in texcoords:
 				tmp_list.append(float(e.attrib['u']))
 				tmp_list.append(float(e.attrib['v']))
+			geo['texturecoords'] = tmp_list
 		
 
 	return geo
@@ -138,8 +144,9 @@ def parse_array(src):
 
 if __name__ == "__main__":
 	# convert_mesh_to_xml("HUM_F")
-	# convert_xml_to_json('HUM_F')
-	convert_xml_to_json('NPC_HUF_TOWN_01')
+	# convert_mesh_to_xml("PET_WOLF")
+	convert_xml_to_json('HUM_F')
+	# convert_xml_to_json('NPC_HUF_TOWN_01')
 	# print parse_materials('HUM_F')
 
 

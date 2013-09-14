@@ -1,0 +1,19 @@
+material pet_wolf_mat
+{
+	technique
+	{
+		pass
+		{
+			ambient 0.588235 0.588235 0.588235
+			diffuse 0.588235 0.588235 0.588235
+			specular 0 0 0 0
+			emissive 0.4 0.4 0.4
+			scene_blend alpha_blend
+			alpha_rejection greater 200
+			texture_unit
+			{
+				texture pet_wolf.png
+			}
+		}
+	}
+}
