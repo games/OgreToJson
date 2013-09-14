@@ -1,40 +1,43 @@
 from subprocess import call
+import json
+
+
 
 def convert_mesh_to_xml(filename):
-	name = filename.lower()
+	name = filename.lower() + '.mesh'
 	call("OgreXMLConverter.exe " + name)
-	convert_xml_to_json(name + '.xml')
+	convert_xml_to_json(filename)
 
 
-def read_xml(filename):
-	file = open(filename, 'r')
-	source = file.read()
-	file.close()
-	print source
 
 def convert_xml_to_json(filename):
 	import xml.etree.ElementTree as ET
 	
-	mesh = {
-		'sharedgeometry' : {
-			'vertexcount' : 0,
-			'vertices' : [],
-			'normals' : [],
-			'texturecoords' : []
-		}, 
-		'submeshes' : []
-	}
+	mesh = {}
 
-	tree = ET.parse(filename)
+	materials = parse_materials(filename)
+
+	tree = ET.parse(filename + '.mesh.xml')
 	root = tree.getroot()
 
-	mesh.sharedgeometry = parse_geometry(root.findall('./sharedgeometry'))
+	sharedgeometry = parse_geometry(root.findall('./sharedgeometry'))
+	if sharedgeometry is not None:
+		mesh['sharedgeometry'] = sharedgeometry
+	mesh['submeshes'] = parse_submeshes(root.findall('./submeshes/submesh'), materials)
+
+
+	mesh_json = json.dumps(mesh)
+	output_file = filename.lower() + '.json'
+	f = open(output_file, 'w')
+	f.write(mesh_json)
+	f.close()
+	print 'Export >>>>> ' + output_file
 
 
 
 def parse_geometry(xml):
 	if len(xml) == 0:
-		return {}
+		return None
 		
 	geo_xml = xml[0]
 	geo = {
@@ -44,9 +47,89 @@ def parse_geometry(xml):
 		'texturecoords' : []
 	}
 
-	geo['vertexcount'] = geo_xml.attrib['vertexcount']
+	geo['vertexcount'] = float(geo_xml.attrib['vertexcount'])
 	vertexbuffer = geo_xml.findall('./vertexbuffer')
-	vertexbuffer
+	for vb in vertexbuffer:
+
+		if 'positions' in vb.attrib:
+			vertex_pos = vb.findall('./vertex/position')
+
+			tmp_list = geo['vertices']
+			for e in vertex_pos:
+				tmp_list.append(float(e.attrib['x']))
+				tmp_list.append(float(e.attrib['y']))
+				tmp_list.append(float(e.attrib['z']))
+
+		if 'normals' in vb.attrib:
+			vertex_normals = vb.findall('./vertex/normal')
+			tmp_list = geo['normals']
+			for e in vertex_pos:
+				tmp_list.append(float(e.attrib['x']))
+				tmp_list.append(float(e.attrib['y']))
+				tmp_list.append(float(e.attrib['z']))
+
+		if 'texture_coords' in vb.attrib:
+			texcoords = vb.findall('./vertex/texcoord')
+			tmp_list = geo['texturecoords']
+			for e in texcoords:
+				tmp_list.append(float(e.attrib['u']))
+				tmp_list.append(float(e.attrib['v']))
+		
+
+	return geo
+
+
+
+def parse_submeshes(xml, materials):
+	if len(xml) == 0:
+		return []
+	submeshes = []
+	for sm in xml:
+		mesh = {'material': materials[sm.attrib['material']], 'faces': []}
+		faces = sm.findall('./faces/face')
+		tmp_list = mesh['faces']
+		for e in faces:
+			tmp_list.append(float(e.attrib['v1']))
+			tmp_list.append(float(e.attrib['v2']))
+			tmp_list.append(float(e.attrib['v3']))
+
+		usesharedvertices = sm.attrib['usesharedvertices'] == 'true'
+		mesh['usesharedvertices'] = usesharedvertices
+		if not usesharedvertices:
+			mesh['geometry'] = parse_geometry(sm.findall('./geometry'))
+		submeshes.append(mesh)
+	return submeshes
+
+
+
+def parse_materials(filename):
+	materials = {}
+	material = None
+	file = open(filename + '.material', 'r')
+	for line in file:
+		l = line.strip()
+		if l.startswith('material'):
+			material = {}
+			material['name'] = l.replace('material', '').strip()
+			materials[material['name']] = material
+		elif l.startswith('ambient'):
+			material['ambient'] = parse_array(l.replace('ambient', ''))
+		elif l.startswith('diffuse'):
+			material['diffuse'] = parse_array(l.replace('diffuse', ''))
+		elif l.startswith('specular'):
+			material['specular'] = parse_array(l.replace('specular', ''))
+		elif l.startswith('emissive'):
+			material['emissive'] = parse_array(l.replace('emissive', ''))
+		elif l.startswith('texture'):
+			material['texture'] = l.replace('texture', '').strip().lower().replace('.png', '.dds')
+	file.close()
+	return materials
+
+
+
+def parse_array(src):
+	return [float(e) for e in src.strip().split(' ')]
+
 
 
 
@@ -54,6 +137,19 @@ def parse_geometry(xml):
 
 
 if __name__ == "__main__":
-	# convert_mesh_to_xml("HUM_F.MESH")
-	# convert_xml_to_json('HUM_F.MESH.xml')
-	convert_xml_to_json('NPC_HUF_TOWN_01.MESH.xml')
+	# convert_mesh_to_xml("HUM_F")
+	# convert_xml_to_json('HUM_F')
+	convert_xml_to_json('NPC_HUF_TOWN_01')
+	# print parse_materials('HUM_F')
+
+
+
+
+
+
+
+
+
+
+
+
