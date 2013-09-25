@@ -145,9 +145,10 @@ def parse_array(src):
 if __name__ == "__main__":
 	# convert_mesh_to_xml("HUM_F")
 	# convert_mesh_to_xml("PET_WOLF")
-	convert_xml_to_json('HUM_F')
+	# convert_xml_to_json('HUM_F')
 	# convert_xml_to_json('NPC_HUF_TOWN_01')
 	# print parse_materials('HUM_F')
+	convert_mesh_to_xml('GREATSWORD21')
 
 
 
