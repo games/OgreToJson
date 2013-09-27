@@ -1,22 +1,9 @@
 import json
 import os
 
-def new_mesh(vertices, normals, texturecoords, faces):
+def new_mesh(faces):
 	return {
-		'geometry' : {
-			'vertexcount' : len(vertices),
-			'vertices' : vertices,
-			'normals' : normals,
-			'texturecoords' : texturecoords,
-			'material' : {
-				'texture': '',
-				'ambient': [1.0, 1.0, 1.0],
-				'diffuse': [1.0, 1.0, 1.0],
-				'specular': [1.0, 1.0, 1.0, 1.0],
-				'emissive': [0.0, 0.0, 0.0]
-			}
-		},
-		'usesharedvertices': False,
+		'usesharedvertices': True,
 		'submeshes' : [],
 		'faces' : faces
 	}
@@ -41,10 +28,7 @@ def convert(filename):
 			# print parts
 			if parts[0] == 'v':
 				if read_vertex_end:
-					mesh_list.append(new_mesh(vertices, normals, texturecoords, faces))
-					vertices = []
-					normals = []
-					texturecoords = []
+					mesh_list.append(new_mesh(faces))
 					faces = []
 					read_vertex_end = False
 				vertices.append(float(parts[1]))
@@ -52,7 +36,6 @@ def convert(filename):
 				vertices.append(float(parts[3]))
 			elif parts[0] == 'f':
 				read_vertex_end = True
-
 				faces.append(float(parts[1].split('/')[0]) - 1.0)
 				faces.append(float(parts[2].split('/')[0]) - 1.0)
 				faces.append(float(parts[3].split('/')[0]) - 1.0)
@@ -67,11 +50,36 @@ def convert(filename):
 	mesh = None
 	if len(mesh_list) == 1:
 		mesh = mesh_list[0]
+		mesh['geometry'] = {
+			'vertexcount' : len(vertices),
+			'vertices' : vertices,
+			'normals' : normals,
+			'texturecoords' : texturecoords
+		}
+		mesh['material'] = {
+			'texture': '',
+			'ambient': [1.0, 1.0, 1.0],
+			'diffuse': [1.0, 1.0, 1.0],
+			'specular': [1.0, 1.0, 1.0, 1.0],
+			'emissive': [0.0, 0.0, 0.0]
+		}
+		del mesh['usesharedvertices']
 	else:
 		mesh = {
-			'sharedgeometry' : None,
-			'submeshes' : mesh_list,
-			'faces' : []
+			'sharedgeometry' : {
+				'vertexcount' : len(vertices),
+				'vertices' : vertices,
+				'normals' : normals,
+				'texturecoords' : texturecoords
+			},
+			'material' : {
+				'texture': '',
+				'ambient': [1.0, 1.0, 1.0],
+				'diffuse': [1.0, 1.0, 1.0],
+				'specular': [1.0, 1.0, 1.0, 1.0],
+				'emissive': [0.0, 0.0, 0.0]
+			},
+			'submeshes' : mesh_list
 		}
 
 	mesh_json = json.dumps(mesh)
@@ -84,4 +92,4 @@ def convert(filename):
 
 
 if __name__ == "__main__":
-	convert('mm')
+	convert('teapot')
