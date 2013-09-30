@@ -140,6 +140,22 @@ def parse_array(src):
 
 
 
+def convert_skeleton_to_xml(filename):
+	name = filename.lower() + '.skeleton'
+	call([os.path.abspath(ogre_converter), os.path.abspath(name)])
+	convert_skeleton_xml_to_json(filename)
+
+
+
+def convert_skeleton_xml_to_json(filename):
+	import xml.etree.ElementTree as ET
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":
@@ -148,7 +164,8 @@ if __name__ == "__main__":
 	# convert_xml_to_json('HUM_F')
 	# convert_xml_to_json('NPC_HUF_TOWN_01')
 	# print parse_materials('HUM_F')
-	convert_mesh_to_xml('GREATSWORD21')
+	# convert_mesh_to_xml('GREATSWORD21')
+	convert_skeleton_to_xml('IDLE_BOW')
 
 
 
