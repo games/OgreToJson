@@ -13,7 +13,6 @@ def convert(filename):
 
 	vertices = []
 	faces = []
-	normals = []
 	texturecoords = []
 	read_vertex_end = False
 
@@ -23,6 +22,7 @@ def convert(filename):
 	file.close()
 
 	lines_parts = []
+	all_normals = []
 	# # read all vertices
 	for line in lines:
 		parts = line.split()
@@ -32,16 +32,16 @@ def convert(filename):
 			vertices.append(float(parts[1]))
 			vertices.append(float(parts[2]))
 			vertices.append(float(parts[3]))
+		elif parts[0] == 'vn':
+			all_normals.append([float(parts[1]), float(parts[2]), float(parts[3])])
 		lines_parts.append(parts)
+	normals = [0 for v in range(0, len(vertices))]
 
 	# # read all normals
-	all_normals = []
-	for parts in lines_parts:
-		if parts[0] == 'vn':
-			all_normals.append(float(parts[1]))
-			all_normals.append(float(parts[2]))
-			all_normals.append(float(parts[3]))
-	normals = list(all_normals)
+	# all_normals = []
+	# for parts in lines_parts:
+	# 	if parts[0] == 'vn':
+	# 		all_normals.append([float(parts[1]), float(parts[2]), float(parts[3])])
 
 
 	for line in lines:
@@ -63,13 +63,28 @@ def convert(filename):
 				faces_part2 = parts[2].split('/')
 				faces_part3 = parts[3].split('/')
 
-				faces.append(float(faces_part1[0]) - 1.0)
-				faces.append(float(faces_part2[0]) - 1.0)
-				faces.append(float(faces_part3[0]) - 1.0)
+				v0 = int(faces_part1[0]) - 1
+				v1 = int(faces_part2[0]) - 1
+				v2 = int(faces_part3[0]) - 1
 
-				normals[int(faces_part1[0]) - 1] = all_normals[int(faces_part1[2]) - 1]
-				normals[int(faces_part2[0]) - 1] = all_normals[int(faces_part2[2]) - 1]
-				normals[int(faces_part3[0]) - 1] = all_normals[int(faces_part3[2]) - 1]
+				n0 = int(faces_part1[2]) - 1
+				n1 = int(faces_part2[2]) - 1
+				n2 = int(faces_part3[2]) - 1
+
+				faces.append(v0)
+				faces.append(v1)
+				faces.append(v2)
+
+				def set_normals(v, n):
+					start = v * 3
+					no = all_normals[n]
+					normals[start] = no[0]
+					normals[start + 1] = no[1]
+					normals[start + 2] = no[2]
+
+				set_normals(v0, n0)
+				set_normals(v1, n1)
+				set_normals(v2, n2)
 
 			# elif parts[0] == 'vn':
 			# 	normals.append(float(parts[1]))
@@ -78,6 +93,10 @@ def convert(filename):
 			elif parts[0] == 'vt':
 				texturecoords.append(float(parts[1]))
 				texturecoords.append(float(parts[2]))
+
+	if len(faces) > 0:
+		mesh_list.append(new_mesh(faces))
+		faces = []
 
 	mesh = None
 	if len(mesh_list) == 1:
