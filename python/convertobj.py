@@ -16,6 +16,14 @@ def new_material():
 		'emissive': [0.0, 0.0, 0.0]
 	}
 
+def new_geometry(vertices, normals, texturecoords):
+	return {
+		'vertexcount' : len(vertices),
+		'vertices' : vertices,
+		'normals' : normals,
+		'texturecoords' : texturecoords
+	}
+
 def convert(filename):
 	vertices = []
 	faces = []
@@ -31,10 +39,12 @@ def convert(filename):
 	all_normals = []
 
 	# # read all vertices
+	line_parts = []
 	for line in lines:
 		parts = line.split()
 		if len(parts) == 0:
 			continue
+		line_parts.append(parts)
 		if parts[0] == 'v':
 			vertices.append(float(parts[1]))
 			vertices.append(float(parts[2]))
@@ -44,10 +54,7 @@ def convert(filename):
 	normals = range(0, len(vertices))
 
 
-	for line in lines:
-		parts = line.split()
-		if len(parts) == 0:
-			continue
+	for parts in line_parts:
 		# print parts
 		if parts[0] == 'v':
 			if read_vertex_end:
@@ -102,22 +109,12 @@ def convert(filename):
 	mesh = None
 	if len(mesh_list) == 1:
 		mesh = mesh_list[0]
-		mesh['geometry'] = {
-			'vertexcount' : len(vertices),
-			'vertices' : vertices,
-			'normals' : normals,
-			'texturecoords' : texturecoords
-		}
+		mesh['geometry'] = new_geometry(vertices, normals, texturecoords)
 		mesh['material'] = new_material()
 		del mesh['usesharedvertices']
 	else:
 		mesh = {
-			'sharedgeometry' : {
-				'vertexcount' : len(vertices),
-				'vertices' : vertices,
-				'normals' : normals,
-				'texturecoords' : texturecoords
-			},
+			'sharedgeometry' : new_geometry(vertices, normals, texturecoords),
 			'material' : new_material(),
 			'submeshes' : mesh_list
 		}
