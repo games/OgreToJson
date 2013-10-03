@@ -24,6 +24,9 @@ def new_geometry(vertices, normals, texturecoords):
 		'texturecoords' : texturecoords
 	}
 
+def parse_materials():
+	pass
+
 def convert(filename):
 	vertices = []
 	faces = []
@@ -45,7 +48,9 @@ def convert(filename):
 		if len(parts) == 0:
 			continue
 		line_parts.append(parts)
-		if parts[0] == 'v':
+		if parts[0] == 'mtllib':
+			parse_materials()
+		elif parts[0] == 'v':
 			vertices.append(float(parts[1]))
 			vertices.append(float(parts[2]))
 			vertices.append(float(parts[3]))
