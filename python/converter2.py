@@ -137,6 +137,25 @@ def _parse_geometry(xml):
 				tmp_list.append(float(e.attrib['u']))
 				tmp_list.append(float(e.attrib['v']))
 			geometry['texturecoords'] = tmp_list
+
+		# def _parse_xyz(target, source):
+		# 	target.append(float(source.attrib['x']))
+		# 	target.append(float(source.attrib['y']))
+		# 	target.append(float(source.attrib['z']))
+
+		# def _parse_uv(target, source):
+		# 	target.append(float(source.attrib['u']))
+		# 	target.append(float(source.attrib['v']))
+
+		# tmp_list = []
+		# for e in vertex:
+		# 	if has_position:
+		# 		_parse_xyz(tmp_list, e.find('position'))
+		# 	if has_normal:
+		# 		_parse_xyz(tmp_list, e.find('normal'))
+		# 	if has_texcoord:
+		# 		_parse_uv(tmp_list, e.find('texcoord'))
+
 	return geometry
 
 
@@ -185,7 +204,7 @@ def _parse_skeleton(filename):
 		rot = e.find('rotation')
 		axis = rot.find('axis')
 		joint['rotation'] = {
-			'angle': rot.attrib['angle'],
+			'angle': float(rot.attrib['angle']),
 			'axis': [float(axis.attrib['x']), float(axis.attrib['y']), float(axis.attrib['z'])]
 		}
 		joints.append(joint)
