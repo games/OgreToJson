@@ -104,7 +104,7 @@ def _parse_mesh(xml):
 
 def _parse_geometry(xml):
 	geometry = {}
-	geometry['vertexcount'] = xml.attrib['vertexcount']
+	geometry['vertexcount'] = float(xml.attrib['vertexcount'])
 	geometry['positions'] = []
 	geometry['normals'] = []
 	geometry['texturecoords'] = []
