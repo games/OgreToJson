@@ -6,22 +6,30 @@ import xml.etree.ElementTree as ET
 
 ogre_converter = 'OgreXMLConverter.exe'
 
+dir_name = ''
+file_name = ''
 
-def convert_mesh_to_xml(filename):
-	name = filename.lower() + '.mesh'
-	print [os.path.abspath(ogre_converter), os.path.abspath(name)]
+def full_name(n):
+	return os.path.join(dir_name, os.path.basename(n))
+
+def convert_mesh_to_xml(name):
+	global dir_name, file_name
+
+	dir_name = os.path.dirname(os.path.abspath(name))
+	file_name = os.path.basename(name).replace('.MESH', '')
+
 	subprocess.call([os.path.abspath(ogre_converter), os.path.abspath(name)])
 
-	name = filename.lower() + '.skeleton'
-	subprocess.call([os.path.abspath(ogre_converter), os.path.abspath(name)])
+	n = file_name + '.skeleton'
+	subprocess.call([os.path.abspath(ogre_converter), os.path.abspath(n)])
+	
+	convert_xml_to_json(file_name)
 
-	convert_xml_to_json(filename)
 
-
-materials = {}
 
 def convert_xml_to_json(filename):
-	tree = ET.parse(filename + '.mesh.xml')
+
+	tree = ET.parse(full_name(filename + '.mesh.xml'))
 	xml_root = tree.getroot()
 
 	# parse materials
@@ -44,8 +52,9 @@ def convert_xml_to_json(filename):
 
 
 def _parse_materials(filename):
+	materials = {}
 	material = None
-	file = open(filename + '.material', 'r')
+	file = open(full_name(filename + '.material'), 'r')
 	for line in file:
 		l = line.strip()
 		if l.startswith('material'):
@@ -61,7 +70,7 @@ def _parse_materials(filename):
 		elif l.startswith('emissive'):
 			material['emissive'] = parse_array(l.replace('emissive', ''))
 		elif l.startswith('texture'):
-			material['texture'] = l.replace('texture', '').strip().lower().replace('.png', '.dds')
+			material['texture'] = l.replace('texture', '').strip().lower()
 	file.close()
 	return materials
 
@@ -104,7 +113,7 @@ def _parse_mesh(xml):
 
 def _parse_geometry(xml):
 	geometry = {}
-	geometry['vertexcount'] = float(xml.attrib['vertexcount'])
+	geometry['vertexcount'] = int(xml.attrib['vertexcount'])
 	geometry['positions'] = []
 	geometry['normals'] = []
 	geometry['texturecoords'] = []
@@ -163,9 +172,9 @@ def _parse_faces(xml):
 	faces_xml = xml.findall('./face')
 	tmp_list = []
 	for e in faces_xml:
-		tmp_list.append(float(e.attrib['v1']))
-		tmp_list.append(float(e.attrib['v2']))
-		tmp_list.append(float(e.attrib['v3']))
+		tmp_list.append(int(e.attrib['v1']))
+		tmp_list.append(int(e.attrib['v2']))
+		tmp_list.append(int(e.attrib['v3']))
 	return tmp_list
 
 
@@ -173,14 +182,14 @@ def _parse_bones_assignments(xml):
 	bones_xml = xml.findall('./bonesassignments/vertexboneassignment')
 	tmp_list = []
 	for e in bones_xml:
-		tmp_list.append(float(e.attrib['vertexindex']))
-		tmp_list.append(float(e.attrib['boneindex']))
+		tmp_list.append(int(e.attrib['vertexindex']))
+		tmp_list.append(int(e.attrib['boneindex']))
 		tmp_list.append(float(e.attrib['weight']))
 	return tmp_list
 
 
 def _parse_skeleton(filename):
-	skeleton_xml = ET.parse(filename + '.xml').getroot()
+	skeleton_xml = ET.parse(full_name(filename + '.xml')).getroot()
 	
 	skeleton = {}
 	if 'blendmode' in skeleton_xml.attrib:
@@ -192,7 +201,7 @@ def _parse_skeleton(filename):
 	joints_xml = skeleton_xml.findall('./bones/bone')
 	for e in joints_xml:
 		joint = {}
-		joint['id'] = float(e.attrib['id'])
+		joint['id'] = int(e.attrib['id'])
 		joint['name'] = e.attrib['name']
 		joint['position'] = []
 		
@@ -239,4 +248,7 @@ if __name__ == "__main__":
 	# convert_mesh_to_xml('GREATSWORD21')
 	# convert_skeleton_to_xml('IDLE_BOW')
 
-	convert_mesh_to_xml('HUM_F')
+	convert_mesh_to_xml('./ALRIC/ALRIC.MESH')
+
+	# name = './ALRIC/ALRIC.MESH'
+	# print os.path.dirname(os.path.abspath(name))
