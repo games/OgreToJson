@@ -328,7 +328,7 @@ if __name__ == "__main__":
 	# convert_mesh_to_xml('GREATSWORD21')
 	# convert_skeleton_to_xml('IDLE_BOW')
 
-	convert_mesh_to_xml('./BOSS_STURM/BOSS_STURM.MESH')
-	# convert_mesh_to_xml('./ALRIC/ALRIC.MESH')
+	# convert_mesh_to_xml('./BOSS_STURM/BOSS_STURM.MESH')
+	convert_mesh_to_xml('./ALRIC/ALRIC.MESH')
 
 
