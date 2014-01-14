@@ -126,8 +126,10 @@ def _parse_mesh(xml):
 		mesh['faces'] = _parse_faces(faces_xml)
 
 	bones_assignments_xml = xml.find('boneassignments')
-	if bones_assignments_xml is not None:
-		mesh['boneassignments'] = _parse_bones_assignments(bones_assignments_xml)
+	if bones_assignments_xml is not None and len(bones_assignments_xml) > 0:
+		(joint_indices, joint_weights) = _parse_bones_assignments(bones_assignments_xml)
+		mesh['jointindices'] = joint_indices
+		mesh['jointweights'] = joint_weights
 
 	
 	if 'material' in xml.attrib:
@@ -214,14 +216,56 @@ def _parse_faces(xml):
 	return tmp_list
 
 
+# http://www.ogre3d.org/docs/manual/manual_46.html
 def _parse_bones_assignments(xml):
 	bones_xml = xml.findall('./vertexboneassignment')
-	tmp_list = []
+
+	joint_indices = []
+	joint_weights = []
+
+	bone_assignments = []
+	last_vertex = -1
+	vertex_index = -1
+	
 	for e in bones_xml:
-		tmp_list.append(int(e.attrib['vertexindex']))
-		tmp_list.append(int(e.attrib['boneindex']))
-		tmp_list.append(float(e.attrib['weight']))
-	return tmp_list
+		
+		vertex_index = int(e.attrib['vertexindex'])
+		bone_index = int(e.attrib['boneindex'])
+		weight = float(e.attrib['weight'])
+
+		if last_vertex != -1 and last_vertex != vertex_index:
+			# normalize, only 4 joints be apply to per vertex
+			indices, weights = _normalize_joint_weights(bone_assignments, last_vertex)
+			joint_indices = joint_indices + indices
+			joint_weights = joint_weights + weights
+			# clear 
+			bone_assignments = []
+		
+		last_vertex = vertex_index
+		bone_assignments.append({'vertex': vertex_index, 'bone': bone_index, 'weight': weight})
+
+	indices, weights = _normalize_joint_weights(bone_assignments, vertex_index)
+	joint_indices = joint_indices + indices
+	joint_weights = joint_weights + weights
+
+	return (joint_indices, joint_weights)
+
+# normalize, only 4 joints be apply to per vertex
+def _normalize_joint_weights(bone_assignments, vertex_index):
+	joint_indices = []
+	joint_weights = []
+	l = len(bone_assignments)
+	if l > 4:
+		list.sort(bone_assignments, key = lambda item: item["weight"], reverse = True)
+	elif l < 4:
+		for x in range(4 - l):
+			bone_assignments.append({'vertex': vertex_index, 'bone': 0, 'weight': 0.0})
+	for x in range(4):
+		j = bone_assignments[x]
+		joint_indices.append(j['bone'])
+		joint_weights.append(j['weight'])
+	return (joint_indices, joint_weights)
+
 
 
 def _parse_skeleton(filename):
@@ -286,3 +330,5 @@ if __name__ == "__main__":
 
 	convert_mesh_to_xml('./BOSS_STURM/BOSS_STURM.MESH')
 	# convert_mesh_to_xml('./ALRIC/ALRIC.MESH')
+
+
