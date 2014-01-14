@@ -92,7 +92,7 @@ def _parse_materials(filename):
 		elif l.startswith('texture_unit'):
 			pass
 		elif l.startswith('texture'):
-			material['texture'] = l.replace('texture', '').strip().lower()
+			material['texture'] = l.replace('texture', '').strip().lower().replace('.dds', '.png')
 			_convert_texture(material['texture'])
 	file.close()
 	return materials
@@ -125,9 +125,9 @@ def _parse_mesh(xml):
 	if faces_xml is not None:
 		mesh['faces'] = _parse_faces(faces_xml)
 
-	bones_assignments_xml = xml.find('bonesassignments')
+	bones_assignments_xml = xml.find('boneassignments')
 	if bones_assignments_xml is not None:
-		mesh['bonesassignments'] = _parse_bones_assignments(bones_assignments_xml)
+		mesh['boneassignments'] = _parse_bones_assignments(bones_assignments_xml)
 
 	
 	if 'material' in xml.attrib:
@@ -215,7 +215,7 @@ def _parse_faces(xml):
 
 
 def _parse_bones_assignments(xml):
-	bones_xml = xml.findall('./bonesassignments/vertexboneassignment')
+	bones_xml = xml.findall('./vertexboneassignment')
 	tmp_list = []
 	for e in bones_xml:
 		tmp_list.append(int(e.attrib['vertexindex']))
@@ -285,3 +285,4 @@ if __name__ == "__main__":
 	# convert_skeleton_to_xml('IDLE_BOW')
 
 	convert_mesh_to_xml('./BOSS_STURM/BOSS_STURM.MESH')
+	# convert_mesh_to_xml('./ALRIC/ALRIC.MESH')
