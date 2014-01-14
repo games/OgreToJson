@@ -1,8 +1,7 @@
-OgreToJson
-==========
 
+specification
+===================
 
-#specification
 
 ```
 {
