@@ -1,10 +1,13 @@
 import subprocess
 import json
 import os
+import glob
+import sys
 import xml.etree.ElementTree as ET
 
 
-ogre_converter = 'OgreXMLConverter.exe'
+ogre_converter = 'OgreXMLConverter'
+ogre_upgrader = 'OgreMeshUpgrader'
 
 dir_name = ''
 file_name = ''
@@ -13,17 +16,34 @@ def full_name(n):
 	return os.path.join(dir_name, os.path.basename(n))
 
 def convert_mesh_to_xml(name):
-	global dir_name, file_name
+	global dir_name, file_name, ogre_converter, ogre_upgrader
 
 	dir_name = os.path.dirname(os.path.abspath(name))
 	file_name = os.path.basename(name).replace('.MESH', '')
 
-	subprocess.call([os.path.abspath(ogre_converter), os.path.abspath(name)])
+	platform = sys.platform
+	if platform.startswith('win'):
+		ogre_converter += '.exe'
+		ogre_upgrader += '.exe'
 
-	n = file_name + '.skeleton'
-	subprocess.call([os.path.abspath(ogre_converter), os.path.abspath(n)])
+	upgrader = os.path.abspath(ogre_upgrader)
+	converter = os.path.abspath(ogre_converter)
+
+	ogre_files = []
+	for f in os.listdir(dir_name):
+		if f.lower().endswith(".skeleton"):
+			ogre_files.append(full_name(f))
+	# mesh file
+	ogre_files.append(os.path.abspath(name))
+
+	for f in ogre_files:
+		p = subprocess.Popen((upgrader, f))
+		p.wait()
+		p = subprocess.Popen((converter, f))
+		p.wait()
 	
 	convert_xml_to_json(file_name)
+
 
 
 
@@ -48,7 +68,7 @@ def convert_xml_to_json(filename):
 	f = open(output_file, 'w')
 	f.write(mesh_json)
 	f.close()
-	print 'Export >>>>> ' + output_file
+	print('Export >>>>> ' + output_file)
 
 
 def _parse_materials(filename):
@@ -69,10 +89,26 @@ def _parse_materials(filename):
 			material['specular'] = parse_array(l.replace('specular', ''))
 		elif l.startswith('emissive'):
 			material['emissive'] = parse_array(l.replace('emissive', ''))
+		elif l.startswith('texture_unit'):
+			pass
 		elif l.startswith('texture'):
 			material['texture'] = l.replace('texture', '').strip().lower()
+			_convert_texture(material['texture'])
 	file.close()
 	return materials
+
+# maybe : no work on windows 64-bit
+# http://nullege.com/codes/show/src%40p%40i%40pilgrim-HEAD%40pilgrim%40codecs%40__init__.py/9/dds.DDS/python
+# http://freeimage.sourceforge.net/download.html
+def _convert_texture(filename):
+	return
+	filename = full_name(filename)
+	name, extension = os.path.splitext(filename.lower())
+	dds_filename = full_name(name + '.dds')
+	if os.path.exists(dds_filename):
+		import pyglet
+		texture = pyglet.image.load(dds_filename)
+		texture.get_texture().save(dds_filename.replace('.dds', '.png'))
 
 
 def _parse_mesh(xml):
@@ -248,7 +284,4 @@ if __name__ == "__main__":
 	# convert_mesh_to_xml('GREATSWORD21')
 	# convert_skeleton_to_xml('IDLE_BOW')
 
-	convert_mesh_to_xml('./ALRIC/ALRIC.MESH')
-
-	# name = './ALRIC/ALRIC.MESH'
-	# print os.path.dirname(os.path.abspath(name))
+	convert_mesh_to_xml('./BOSS_STURM/BOSS_STURM.MESH')
