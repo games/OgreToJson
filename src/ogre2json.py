@@ -29,20 +29,37 @@ def convert_mesh_to_xml(name):
 	upgrader = os.path.abspath(ogre_upgrader)
 	converter = os.path.abspath(ogre_converter)
 
+	skeleton_files = []
 	ogre_files = []
 	for f in os.listdir(dir_name):
 		if f.lower().endswith(".skeleton"):
-			ogre_files.append(full_name(f))
+			skeleton_files.append(full_name(f))
 	# mesh file
+	ogre_files = [f for f in skeleton_files]
 	ogre_files.append(os.path.abspath(name))
 
-	for f in ogre_files:
-		p = subprocess.Popen((upgrader, f))
-		p.wait()
-		p = subprocess.Popen((converter, f))
-		p.wait()
-	
-	convert_xml_to_json(file_name)
+	try:
+		for f in ogre_files:
+			break
+			p = subprocess.Popen((upgrader, f))
+			p.wait()
+			p = subprocess.Popen((converter, f))
+			p.wait()
+	except Exception as e:
+		pass
+	finally:
+		convert_xml_to_json(file_name)
+
+	animations = []
+	for f in skeleton_files:
+		animations.append(_parse_skeleton(f))
+
+	for animation in animations:
+		aj = json.dumps(animation)
+		output_file = animation['name'] + '.json'
+		f = open(output_file, 'w')
+		f.write(aj)
+		f.close()
 
 
 
@@ -254,16 +271,28 @@ def _parse_bones_assignments(xml):
 def _normalize_joint_weights(bone_assignments, vertex_index):
 	joint_indices = []
 	joint_weights = []
+
 	l = len(bone_assignments)
 	if l > 4:
 		list.sort(bone_assignments, key = lambda item: item["weight"], reverse = True)
 	elif l < 4:
 		for x in range(4 - l):
 			bone_assignments.append({'vertex': vertex_index, 'bone': 0, 'weight': 0.0})
+	
+	total_weight = 0.0;
+	for x in range(4):
+		j = bone_assignments[x]
+		total_weight += j['weight']
+
+	adjust_weight = 0.0
+	if total_weight < 1.0:
+		adjust_weight = (1.0 - total_weight) / 4
+
 	for x in range(4):
 		j = bone_assignments[x]
 		joint_indices.append(j['bone'])
-		joint_weights.append(j['weight'])
+		joint_weights.append(j['weight'] + adjust_weight)
+
 	return (joint_indices, joint_weights)
 
 
@@ -296,6 +325,8 @@ def _parse_skeleton(filename):
 			'angle': float(rot.attrib['angle']),
 			'axis': [float(axis.attrib['x']), float(axis.attrib['y']), float(axis.attrib['z'])]
 		}
+		
+		joint['parent'] = -1
 		joints.append(joint)
 		joints_map[joint['name']] = joint
 	skeleton['joints'] = joints
@@ -306,10 +337,56 @@ def _parse_skeleton(filename):
 		name = e.attrib['bone']
 		parent = e.attrib['parent']
 		joint = joints_map[name]
-		if parent == 'root':
-			joint['parent'] = -1
-		else:
-			joint['parent'] = joints_map[parent]['id']
+		joint['parent'] = joints_map[parent]['id']
+
+	skeleton['name'] = os.path.basename(filename).lower().replace('.skeleton', '')
+	animations = skeleton_xml.find('./animations')
+	if animations is not None and len(animations) > 0:
+		animation_xml = animations[0]
+		animation = {}
+		if 'name' in animation_xml.attrib:
+			skeleton['name'] = animation_xml.attrib['name']
+			animation['name'] = animation_xml.attrib['name']
+		if 'length' in animation_xml.attrib:
+			animation['length'] = animation_xml.attrib['length']
+
+		tracks = []
+		tracks_xml = animation_xml.findall('./tracks/track')
+		if tracks_xml is not None and len(tracks_xml) > 0:
+			for track_xml in tracks_xml:
+				track = {}
+				track['joint'] = track_xml.attrib['bone']
+				track['keyframes'] = []
+				keyframes = []
+				keyframes_xml = track_xml.findall('./keyframes/keyframe')
+				for keyframe_xml in keyframes_xml:
+					keyframe = {}
+					keyframe['time'] = keyframe_xml.attrib['time']
+
+					translate_xml = keyframe_xml.find('translate')
+					keyframe['translate'] = []
+					keyframe['translate'].append(float(translate_xml.attrib['x']))
+					keyframe['translate'].append(float(translate_xml.attrib['y']))
+					keyframe['translate'].append(float(translate_xml.attrib['z']))
+
+					rotate_xml = keyframe_xml.find('rotate')
+					keyframe['rotate'] = {}
+					keyframe['rotate']['angle'] = rotate_xml.attrib['angle']
+					keyframe['rotate']['axis'] = []
+					axis_xml = rotate_xml.find('axis')
+					keyframe['rotate']['axis'].append(float(axis_xml.attrib['x']))
+					keyframe['rotate']['axis'].append(float(axis_xml.attrib['y']))
+					keyframe['rotate']['axis'].append(float(axis_xml.attrib['z']))
+
+					keyframes.append(keyframe)
+
+				track['keyframes'] = keyframes
+				tracks.append(track)
+
+			animation['tracks'] = tracks
+		animation['tracks'] = tracks
+	skeleton['animations'] = []
+	skeleton['animations'].append(animation)
 
 	return skeleton
 

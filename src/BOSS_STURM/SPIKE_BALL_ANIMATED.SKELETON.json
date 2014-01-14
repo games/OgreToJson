@@ -1,0 +1,1 @@
+{"joints": [{"parent": -1, "id": 0, "position": [0.0, 0.0, 0.0], "name": "root", "rotation": {"axis": [-1.0, -0.0, -0.0], "angle": 1.5708}}, {"parent": 0, "id": 1, "position": [0.0, 0.0, 0.0], "name": "spike_base", "rotation": {"axis": [1.0, 0.0, 0.0], "angle": 0.0}}], "name": "/Users/z/workspace/github/OgreToJson/src/BOSS_STURM/SPIKE_BALL_ANIMATED.SKELETON"}
