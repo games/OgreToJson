@@ -1,4 +1,4 @@
-material NPC_HuF_town_01_mat
+material Alric
 {
 	technique
 	{
@@ -8,9 +8,11 @@ material NPC_HuF_town_01_mat
 			diffuse 0.588 0.588 0.588
 			specular 0 0 0 0
 			emissive 0.4 0.4 0.4
+			scene_blend alpha_blend
+			alpha_rejection greater 5
 			texture_unit
 			{
-				texture NPC_HuF_town_01.png
+				texture alric.png
 			}
 		}
 	}
