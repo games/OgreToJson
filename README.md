@@ -4,6 +4,7 @@ OgreToJson
 
 #specification
 
+```
 {
   materials : {
     material_name : {
@@ -35,3 +36,4 @@ OgreToJson
   }
 
 }
+```
