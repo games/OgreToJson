@@ -356,7 +356,8 @@ def _parse_skeleton(filename):
 		if tracks_xml is not None and len(tracks_xml) > 0:
 			for track_xml in tracks_xml:
 				track = {}
-				track['joint'] = track_xml.attrib['bone']
+				joint_name = track_xml.attrib['bone']
+				track['joint'] = joints_map[joint_name]['id']
 				track['keyframes'] = []
 				keyframes = []
 				keyframes_xml = track_xml.findall('./keyframes/keyframe')
