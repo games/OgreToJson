@@ -60,6 +60,7 @@ def convert_mesh_to_xml(name):
 		f = open(output_file, 'w')
 		f.write(aj)
 		f.close()
+		print("export animation >> " + output_file)
 
 
 
@@ -85,7 +86,7 @@ def convert_xml_to_json(filename):
 	f = open(output_file, 'w')
 	f.write(mesh_json)
 	f.close()
-	print('Export >>>>> ' + output_file)
+	print('export mesh >>>>> ' + output_file)
 
 
 def _parse_materials(filename):
@@ -348,7 +349,7 @@ def _parse_skeleton(filename):
 			skeleton['name'] = animation_xml.attrib['name']
 			animation['name'] = animation_xml.attrib['name']
 		if 'length' in animation_xml.attrib:
-			animation['length'] = animation_xml.attrib['length']
+			animation['length'] = float(animation_xml.attrib['length'])
 
 		tracks = []
 		tracks_xml = animation_xml.findall('./tracks/track')
@@ -361,7 +362,7 @@ def _parse_skeleton(filename):
 				keyframes_xml = track_xml.findall('./keyframes/keyframe')
 				for keyframe_xml in keyframes_xml:
 					keyframe = {}
-					keyframe['time'] = keyframe_xml.attrib['time']
+					keyframe['time'] = float(keyframe_xml.attrib['time'])
 
 					translate_xml = keyframe_xml.find('translate')
 					keyframe['translate'] = []
@@ -371,7 +372,7 @@ def _parse_skeleton(filename):
 
 					rotate_xml = keyframe_xml.find('rotate')
 					keyframe['rotate'] = {}
-					keyframe['rotate']['angle'] = rotate_xml.attrib['angle']
+					keyframe['rotate']['angle'] = float(rotate_xml.attrib['angle'])
 					keyframe['rotate']['axis'] = []
 					axis_xml = rotate_xml.find('axis')
 					keyframe['rotate']['axis'].append(float(axis_xml.attrib['x']))
