@@ -56,7 +56,7 @@ def convert_mesh_to_xml(name):
 
 	for animation in animations:
 		aj = json.dumps(animation)
-		output_file = animation['name'] + '.json'
+		output_file = animation['name'].lower() + '.json'
 		f = open(output_file, 'w')
 		f.write(aj)
 		f.close()

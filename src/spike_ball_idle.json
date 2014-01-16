@@ -1,1 +1,0 @@
-{"animations": [{"tracks": []}], "name": "spike_ball_idle", "joints": [{"parent": -1, "id": 0, "rotation": {"axis": [-1.0, -0.0, -0.0], "angle": 1.5708}, "name": "root", "position": [0.0, 0.0, 0.0]}, {"parent": 0, "id": 1, "rotation": {"axis": [1.0, 0.0, 0.0], "angle": 0.0}, "name": "spike_base", "position": [0.0, 0.0, 0.0]}]}
