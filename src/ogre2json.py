@@ -5,6 +5,8 @@ import glob
 import sys
 import xml.etree.ElementTree as ET
 
+version = '0.1'
+file_extension = '.orange'
 
 ogre_converter = 'OgreXMLConverter'
 ogre_upgrader = 'OgreMeshUpgrader'
@@ -48,45 +50,43 @@ def convert_mesh_to_xml(name):
 	except Exception as e:
 		pass
 	finally:
-		convert_xml_to_json(file_name)
-
-	animations = []
-	for f in skeleton_files:
-		animations.append(_parse_skeleton(f))
-
-	for animation in animations:
-		aj = json.dumps(animation)
-		output_file = animation['name'].lower() + '.json'
-		f = open(output_file, 'w')
-		f.write(aj)
-		f.close()
-		print("export animation >> " + output_file)
+		convert_xml_to_json(file_name, skeleton_files)
 
 
 
 
-def convert_xml_to_json(filename):
+def convert_xml_to_json(mesh_filename, skeleton_files):
 
-	tree = ET.parse(full_name(filename + '.mesh.xml'))
+	tree = ET.parse(full_name(mesh_filename + '.mesh.xml'))
 	xml_root = tree.getroot()
 
 	# parse materials
-	materials = _parse_materials(filename)
+	materials = _parse_materials(mesh_filename)
 
 	# parse meshes
 	mesh_root = _parse_mesh(xml_root)
 
-	out = {
+	# parse animations
+	animations = []
+	for f in skeleton_files:
+		skeleton = _parse_skeleton(f)
+		if 'animation' in skeleton:
+			animations.append(skeleton)
+
+	orange_model = {
+		'version': version,
 		'materials': materials,
-		'mesh': mesh_root
+		'mesh': mesh_root,
+		'animations': animations
 	}
 
-	mesh_json = json.dumps(out)
-	output_file = filename.lower() + '.json'
+	model_json = json.dumps(orange_model)
+	output_file = mesh_filename.lower() + file_extension
 	f = open(output_file, 'w')
-	f.write(mesh_json)
+	f.write(model_json)
 	f.close()
-	print('export mesh >>>>> ' + output_file)
+	print('export model >>>>> ' + output_file)
+
 
 
 def _parse_materials(filename):
@@ -202,24 +202,6 @@ def _parse_geometry(xml):
 				tmp_list.append(float(e.attrib['u']))
 				tmp_list.append(float(e.attrib['v']))
 			geometry['texturecoords'] = tmp_list
-
-		# def _parse_xyz(target, source):
-		# 	target.append(float(source.attrib['x']))
-		# 	target.append(float(source.attrib['y']))
-		# 	target.append(float(source.attrib['z']))
-
-		# def _parse_uv(target, source):
-		# 	target.append(float(source.attrib['u']))
-		# 	target.append(float(source.attrib['v']))
-
-		# tmp_list = []
-		# for e in vertex:
-		# 	if has_position:
-		# 		_parse_xyz(tmp_list, e.find('position'))
-		# 	if has_normal:
-		# 		_parse_xyz(tmp_list, e.find('normal'))
-		# 	if has_texcoord:
-		# 		_parse_uv(tmp_list, e.find('texcoord'))
 
 	return geometry
 
@@ -342,6 +324,7 @@ def _parse_skeleton(filename):
 
 	skeleton['name'] = os.path.basename(filename).lower().replace('.skeleton', '')
 	animations = skeleton_xml.find('./animations')
+	animation = None
 	if animations is not None and len(animations) > 0:
 		animation_xml = animations[0]
 		animation = {}
@@ -384,12 +367,9 @@ def _parse_skeleton(filename):
 
 				track['keyframes'] = keyframes
 				tracks.append(track)
-
 			animation['tracks'] = tracks
-		animation['tracks'] = tracks
-	skeleton['animations'] = []
-	skeleton['animations'].append(animation)
-
+	if animation is not None and 'tracks' in animation and len(animation['tracks']) > 0:
+		skeleton['animation'] = animation
 	return skeleton
 
 
