@@ -70,7 +70,7 @@ def convert_xml_to_json(mesh_filename, skeleton_files):
 	animations = []
 	for f in skeleton_files:
 		skeleton = _parse_skeleton(f)
-		if 'animation' in skeleton:
+		if 'tracks' in skeleton and len(skeleton['tracks']) > 0:
 			animations.append(skeleton)
 
 	orange_model = {
@@ -324,15 +324,13 @@ def _parse_skeleton(filename):
 
 	skeleton['name'] = os.path.basename(filename).lower().replace('.skeleton', '')
 	animations = skeleton_xml.find('./animations')
-	animation = None
+	
 	if animations is not None and len(animations) > 0:
 		animation_xml = animations[0]
-		animation = {}
 		if 'name' in animation_xml.attrib:
 			skeleton['name'] = animation_xml.attrib['name']
-			animation['name'] = animation_xml.attrib['name']
 		if 'length' in animation_xml.attrib:
-			animation['length'] = float(animation_xml.attrib['length'])
+			skeleton['length'] = float(animation_xml.attrib['length'])
 
 		tracks = []
 		tracks_xml = animation_xml.findall('./tracks/track')
@@ -367,9 +365,7 @@ def _parse_skeleton(filename):
 
 				track['keyframes'] = keyframes
 				tracks.append(track)
-			animation['tracks'] = tracks
-	if animation is not None and 'tracks' in animation and len(animation['tracks']) > 0:
-		skeleton['animation'] = animation
+			skeleton['tracks'] = tracks
 	return skeleton
 
 
